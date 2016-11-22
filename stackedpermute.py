@@ -1,3 +1,5 @@
+# Stacked Tensor Permutation
+# Emanuele Ruffaldi 2016
 import numpy
 import itertools
 
@@ -18,37 +20,53 @@ def makesubdims(pairs):
 	for x in pairs:
 		r = r + [SubDim(name,size) for name,size in x]
 	return r
-def stackedpermute(a, inshape, outshape,verbose=False):	
 
-	def parseshapes(inshape):
-		expandsizes = []
-		inputsubdims = dict()
-		compactsizes = []
-		ordereddims = []
-		q = 0
-		for i,x in enumerate(inshape):
-			if isinstance(x,SubDim):
-				inputsubdims[x] = q
-				q += 1
-				expandsizes.append(x.size)
-				compactsizes.append(x.size)
-				ordereddims.append(x)
-			else:
-				w = 1
-				for j,s in enumerate(x):
-					inputsubdims[s] = q
-					expandsizes.append(s.size)
-					ordereddims.append(s)
-					w *= s.size
-					q += 1
-				compactsizes.append(w)
-		return expandsizes,inputsubdims,compactsizes,ordereddims
+def normalize(inshape):
+	return tuple([(x,) if isinstance(x,SubDim) else x for x in inshape])
+
+def parseshapes(inshape):
+	expandsizes = []
+	inputsubdims = dict()
+	compactsizes = []
+	ordereddims = []
+	q = 0
+	for i,x in enumerate(normalize(inshape)):
+		w = 1
+		for j,s in enumerate(x):
+			inputsubdims[s] = q
+			expandsizes.append(s.size)
+			ordereddims.append(s)
+			w *= s.size
+			q += 1
+		compactsizes.append(w)
+	return expandsizes,inputsubdims,compactsizes,ordereddims
+
+def getstrides(inshape):
+	# row major (start from last)
+	si = 1
+	ox = [] # nested as inshape
+	od = {} # per subdim
+	for i,x in enumerate(normalize(inshape[-1::-1])):
+		oy = []
+		for j,s in enumerate(x[-1::-1]):
+			oy.append(si)
+			od[s] = si
+			si *= s.size
+		ox.append(oy)
+	return ox,od
+
+def stackedpermute(a, inshape, outshape=None,verbose=False):	
+
+
 
 	ie,ii,ic,io = parseshapes(inshape)
-	oe,oi,oc,oo = parseshapes(outshape)
-	if set(io) != set(oo):
-		raise "Sub Mismatch of dimensions"
+	if outshape is not None:
+		oe,oi,oc,oo = parseshapes(outshape)
+		if set(io) != set(oo):
+			raise "Sub Mismatch of dimensions"
 	aflat = numpy.reshape(a,ie)
+	if outshape is None:
+		return aflat
 	aa = [ii[o] for o in oo]
 	if aa != range(0,len(ie)):
 		aordered = numpy.transpose(aflat,axes=aa)
@@ -87,4 +105,5 @@ if __name__ == '__main__':
 	r = stackedpermute(a,af,rf,verbose=True)
 	print "then",rf,r.shape
 	print r
+	print "stides",getstrides(rf)
 	
