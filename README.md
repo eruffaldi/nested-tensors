@@ -42,8 +42,20 @@ In the example below we create a matrix with the original index as the value and
 # CNN Example
 A practical example in CNN is the following. Assuming that we are dealing with a timeseries of T samples made of F features (position,velocity) in 3 dimensions (xyz). This means that the input can be assumed to be (T,F,C). Then, for perforning convolution we need to reduce to a 2 dimension matrix along several approaches:
 
-* F|T,C that is we have F separate convolutions of matrices T by C
 * T,FC  that is we have a matrix with time on rows, and stacked F and C on columns
 * T,CF  as above witht C and F flipped
+* F|T,C that is we have F separate convolutions of matrices T by C
+
+The latter case requires to split the tensor in contiguous chunks so that the sub matrices F,C can be sento to different parts of the graph. For row major cases we just need to place these subdimensions first.
+
+The Python version provides a function that returns just the stide of a given shape
+
+# Jacobian Case
+
+The stacking of tensors is also useful when dealing with arbitrary Jacobian for functions $(R^n1,R^(m2,n2),R^n3) -> R^(k,q)$ that is a function from different inputs as vector or matrices and a vector, or matrix (p,q) as output. The resulting Jacobian can be flattened to a matrix as: (KQ, N1+M2 N2 + N3).
+
+# Missing
+
+What is missing it is something that goes beyond the stacking of dimension and it is the justaposition of dimensions.
 
 
