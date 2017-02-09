@@ -25,9 +25,17 @@ Unpacked: (A,B,C,D,E,F,G,H)
 Requested Packed: ((F,B,D),(A,C),(H,E))
 Unpacked: (F,B,D,A,C,H,E)
 
+## Easy cases
+
+For some easy cases the Matlab and Numpy functions will suffice:
+* x.reshape in Numpy and reshape(x,...) in Matlab accepts one of the dimensions as floating so that it is computed automatically from the input (specified using [] in Matlab and -1 for Python)
+* x.ravel() in Numpy and flatten(x) flattens the matrix
+
+
 ## Approach
 
 in Matlab (column major) we unpack the tensor using reshape into a regular tensor, reorder the dimensions and the reshape them in the final ones. Unpacking/packing is done via reshape, while permutation is done with permute. Matlab is column major so any unpacked list needs to be reversed before usage in the reshape/permute.
+
 
 # Example
 
