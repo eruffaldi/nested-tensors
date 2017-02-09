@@ -34,8 +34,9 @@ For some easy cases the Matlab and Numpy functions will suffice:
 
 ## Approach
 
-in Matlab (column major) we unpack the tensor using reshape into a regular tensor, reorder the dimensions and the reshape them in the final ones. Unpacking/packing is done via reshape, while permutation is done with permute. Matlab is column major so any unpacked list needs to be reversed before usage in the reshape/permute.
+In Matlab (column major) we unpack the tensor using reshape into a regular tensor, reorder the dimensions and the reshape them in the final ones. Unpacking/packing is done via reshape, while permutation is done with permute. Matlab is column major so any unpacked list needs to be reversed before usage in the reshape/permute.
 
+Performance note: in Python the reshaping of sizes or the permutation of dimensions has no performance penalty
 
 # Example
 
