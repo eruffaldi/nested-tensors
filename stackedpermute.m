@@ -1,4 +1,4 @@
-function Y = stackedpermute(X,sizes,order)
+function Y = stackedpermute(X,inputsizes,outputorder)
 % 
 % This function is useful for manipulating ND matrices whose dimensions contains sub-dimensions stacked in each dimension
 % In particular it permutes the subdimensions 
@@ -26,56 +26,61 @@ function Y = stackedpermute(X,sizes,order)
 %
 % Initial 2013/06/07
 % Emanuee Ruffaldi, Scuola Superiore S.Anna, Pisa, Italy
+%
+% Modified 2018
+% Refactored support for array
+% 
 
 if nargin == 2
     order = [];
 end
 
-if iscell(sizes)
-    indims = length(sizes);
-    subdimsize = [];
-    for I=1:length(sizes)
-        subdimsize = [subdimsize,sizes{I}(:)'];
-    end
-else
-    indims = sum(isnan(sizes))+1;
-    subdimsize = sizes(isnan(sizes) == 0);
+if iscell(inputsizes) == 0
+    % split by nan
+    isizes = inputsizes;
+    parts = find(isnan(isizes));
+    if isempty(parts)
+        inputsizes = {isizes};
+    else
+        parts = [0;parts;length(isizes)+1];
+        inputsizes = cell(length(parts)-1,1);
+        for I=1:length(parts)-1
+            inputsizes{I} = isizes(parts(I)+1:parts(I+1)-1);
+        end
+    end    
 end
 
-if iscell(order)
-    outdims = length(order);
-    reorderedsubdims = [];
-    outdimssizes = zeros(outdims,1);
-    for I=1:length(order)
-        subsI = order{I}(:)';
-        if isempty(subsI)
-            outdimssizes(I) = 1;            
-        else
-            reorderedsubdims = [reorderedsubdims,subsI];
-            outdimssizes(I) = prod(subdimsize(subsI));
-        end
+indims = length(inputsizes);
+subdimsize = [];
+for I=1:length(inputsizes)
+    missing = find(inputsizes{I} == 0);
+    assert(length(missing) < 2);
+    if length(missing) == 1
+        s = inputsizes{I};
+        s(missing) = 1;
+        inputsizes{I}(missing) = size(X,I)/prod(s);
     end
-elseif isempty(order) == 0
-    k = [find(isnan(order))];
-    outdims = length(k)+1;
-    k = [0,k,length(order)+1];
-    outdimssizes = zeros(outdims,1);
-    reorderedsubdims = order(isnan(order) == 0);
-    for I=1:length(k)-1
-        subsI = order(k(I)+1:k(I+1)-1);
-        if isempty(subsI) 
-            outdimssizes(I) = 1;
-        else
-            outdimssizes(I) = prod(subdimsize(subsI));
-        end
-    end 
+    subdimsize = [subdimsize,inputsizes{I}(:)'];
 end
 
+outdims = length(outputorder);
+reorderedsubdims = [];
+outdimssizes = zeros(outdims,1);
+for I=1:length(outputorder)
+    subsI = outputorder{I}(:)';
+    if isempty(subsI)
+        outdimssizes(I) = 1;            
+    else
+        reorderedsubdims = [reorderedsubdims,subsI];
+        outdimssizes(I) = prod(subdimsize(subsI));
+    end
+end
+    
 
 assert(numel(X) == prod(subdimsize),'Number of elements from description does not match with input matrix');
 assert(ndims(X) == indims,'Number of dimensions from description does not match with input matrix');
 
-if isempty(order) 
+if isempty(outputorder) 
     Y = reshape(X,subdimsize);
 else
     assert(prod(outdimssizes) == prod(subdimsize),'Number of elements in input should be the same of output');
