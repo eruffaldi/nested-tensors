@@ -78,7 +78,7 @@ end
     
 
 assert(numel(X) == prod(subdimsize),'Number of elements from description does not match with input matrix');
-assert(ndims(X) == indims,'Number of dimensions from description does not match with input matrix');
+assert(ndims(X) >= indims,'Number of dimensions from description does not match with input matrix');
 
 if isempty(outputorder) 
     Y = reshape(X,subdimsize);
